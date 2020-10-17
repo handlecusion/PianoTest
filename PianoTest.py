@@ -4,6 +4,8 @@ import winsound as ws
 import threading
 import time
 
+#수정중
+
 setGameOption(GameOption.INVENTORY_BUTTON, False)
 setGameOption(GameOption.MESSAGE_BOX_BUTTON, False)
 setGameOption(GameOption.ROOM_TITLE, False)
