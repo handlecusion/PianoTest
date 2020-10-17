@@ -21,9 +21,12 @@ class Note:
         self.position = position
         self.length = length
         self.line = line
+        self.pitch = pitch
         self.posx = 0
         self.posy = 0
         self.source = 'Images/note/note_'
+        self.source_gray = ''
+        self.isplay = False
         
         self.posy += pitch * 10
         self.posx += 150 + position * 40 + position // 8 * 40
@@ -76,7 +79,12 @@ class Note:
 
         if line == 1:
             self.posy += pos_musicpaper_1
-            self.source += '.png'
+            if self.isplay:
+                self.source += '_gray.png'
+                self.source_gray = self.source
+            else:
+                self.source_gray = self.source + '_gray.png'
+                self.source += '.png'
         elif line ==2:
             self.posy += pos_musicpaper_2
             self.source += '_gray.png'
@@ -94,6 +102,12 @@ class Note:
     def getLine(self):
         return self.line
 
+    def getPitch(self):
+        return self.pitch
+
+    def toGray(self):
+        self.note.setImage(self.source_gray)
+
     def __del__(self):
         #pass
         self.note.hide()
@@ -108,21 +122,27 @@ class MusicPaper:
     def __init__(self, list):
         self.note = []
         self.progress = 0
-        self.now_play_index = 4
-        self.now_play_line = 0
+        self.now_play_index = 0
+        self.now_play_line = 1
         self.list = list
         for n in self.list:
             self.note.append(Note((n[0]*8 + n[1]) % 24, n[2], n[0]//3 + 1, n[3]))
 
 
     def played(self):
+        self.note[self.now_play_index].isplay = True
+        self.note[self.now_play_index].toGray()
+        print("len: ", len(self.note))
         self.now_play_index += 1
-        if self.note[self.now_play_index].getLine() == self.now_play_line + 1:
+        if len(self.note) == self.now_play_index:
+            return True
+        if self.note[self.now_play_index].getLine() == 2:
+            print("in if def played")
             self.now_play_line += 1
             self.note.clear()
             for n in self.list:
-                self.note.append(Note((n[0]*8 + n[1]) % 24, n[2], n[0]//3 + 1 - self.now_play_line, n[3]))
-
+                self.note.append(Note((n[0]*8 + n[1]) % 24, n[2], n[0]//3 + 2 - self.now_play_line, n[3]))
+        return False
 
 def sound_onCompleted(object):
     print(object)
@@ -197,6 +217,8 @@ music_paper_1 = Object("Images/note/music_paper.png")
 music_paper_1.locate(scene_main, 0, pos_musicpaper_1)
 music_paper_1.show()
 
+musicpaper = MusicPaper([[0, 0, 4, 0], [0, 2, 8, 0]])
+
 sound = [
     SoundPiano('Sounds/sound1.mp3'),
     SoundPiano('Sounds/sound2.mp3'),
@@ -215,10 +237,12 @@ free_pos = 0
 free_length = 4
 free_line = 1
 
+
 def handlePress(key):
     global previus
     global mode
     global free_pos
+    global musicpaper
     if previus == key:
         return
     print( 'Press: {}'.format( key ) )
@@ -226,7 +250,6 @@ def handlePress(key):
         print("in if mode == 0")
         return
     elif mode == 1:
-        print("in handlepress elif mode == 1")
         if key == KeyCode(char='a'):
             print("in if key == keycode")
             sound[0].play()
@@ -304,7 +327,54 @@ def handlePress(key):
             return
         free_pos += 2
     elif mode == 2:
-        pass
+        finish = False
+        print("now_play_index: ", musicpaper.now_play_index)
+        print("note.pitch:", musicpaper.note[musicpaper.now_play_index].getPitch())
+        if key == KeyCode(char='a'):
+            sound[0].play()
+            if musicpaper.note[musicpaper.now_play_index].getPitch() == 0:
+                finish = musicpaper.played()
+            previus = KeyCode(char='a')
+        elif key == KeyCode(char='s'):
+            sound[1].play()
+            if musicpaper.note[musicpaper.now_play_index].getPitch() == 1:
+                finish = musicpaper.played()
+            previus = KeyCode(char='s')
+        elif key == KeyCode(char='d'):
+            sound[2].play()
+            if musicpaper.note[musicpaper.now_play_index].getPitch() == 2:
+                finish = musicpaper.played()
+            previus = KeyCode(char='d')
+        elif key == KeyCode(char='f'):
+            sound[3].play()
+            if musicpaper.note[musicpaper.now_play_index].getPitch() == 3:
+                finish = musicpaper.played()
+            previus = KeyCode(char='f')
+        elif key == KeyCode(char='j'):
+            sound[4].play()
+            if musicpaper.note[musicpaper.now_play_index].getPitch() == 4:
+                finish = musicpaper.played()
+            previus = KeyCode(char='j')
+        elif key == KeyCode(char='k'):
+            sound[5].play()
+            if musicpaper.note[musicpaper.now_play_index].getPitch() == 5:
+                finish = musicpaper.played()
+            previus = KeyCode(char='k')
+        elif key == KeyCode(char='l'):
+            sound[6].play()
+            if musicpaper.note[musicpaper.now_play_index].getPitch() == 6:
+                finish = musicpaper.played()
+            previus = KeyCode(char='l')
+        elif key == KeyCode(char=';'):
+            sound[7].play()
+            if musicpaper.note[musicpaper.now_play_index].getPitch() == 7:
+                finish = musicpaper.played()
+            previus = KeyCode(char=';')
+        else:
+            return
+
+        if finish:
+            showMessage('곰세마리 클리어!')
     
     
 def handleRelease(key):
@@ -386,6 +456,7 @@ button_free.onMouseAction = button_free_onMouseAction
 
 def button_threebear_onMouseAction(x, y, action):
     global mode
+    global musicpaper
     mode = 2
     arr = [
     [0, 0, 4, 0], [0, 2, 8, 0], [0, 3, 8, 0], [0, 4, 4, 0], [0, 6, 4, 0],
@@ -403,8 +474,8 @@ def button_threebear_onMouseAction(x, y, action):
 ]
 
     musicpaper = MusicPaper(arr)
+    #musicpaper.played()
     startGame(scene_main)
-    global t
 
 button_threebear.onMouseAction = button_threebear_onMouseAction
 
